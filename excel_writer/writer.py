@@ -57,6 +57,7 @@ class ExcelWriter:
 
     def create_sheet(self, sheet_name: str, position: Optional[int] = None) -> None:
         self._workbook.create_sheet(sheet_name, position)
+        self.set_current_sheet(sheet_name)
 
     def rename_sheet(self, sheet: Union[str, int], new_sheet_name: str) -> None:
         sheet_obj = self._get_worksheet(sheet)
