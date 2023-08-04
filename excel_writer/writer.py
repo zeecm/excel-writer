@@ -7,7 +7,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 
 class Writer(Protocol):
-    self.worksheets: Tuple[str, ...]
+    worksheets: Tuple[str, ...]
 
     def save_workbook(self, filepath: str, filename: str) -> None:
         ...
