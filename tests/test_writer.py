@@ -49,13 +49,13 @@ class TestExcelWriter:
 
     def test_set_current_sheet_by_name(self):
         self.writer.create_sheet("new_sheet")
-        self.writer.set_current_sheet("new_sheet")
+        self.writer.set_active_sheet("new_sheet")
         assert self.writer.active_sheet.title == "new_sheet"
 
     def test_set_current_sheet_by_index(self):
         self.writer.create_sheet("new_sheet_1")
         self.writer.create_sheet("new_sheet_2")
-        self.writer.set_current_sheet(2)
+        self.writer.set_active_sheet(2)
         assert self.writer.active_sheet.title == "new_sheet_2"
 
     def test_cell_using_notation(self):

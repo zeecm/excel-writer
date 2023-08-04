@@ -1,13 +1,23 @@
 import os
-from typing import Optional, Protocol, Tuple, Union, overload
+from typing import Optional, Protocol, Tuple, Type, Union, overload
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.cell import Cell
 from openpyxl.worksheet.worksheet import Worksheet
 
+_CellTypes = Type[Cell]
+
 
 class Writer(Protocol):
     worksheets: Tuple[str, ...]
+
+    def cell(
+        self,
+        sheet: Union[str, int],
+        cell_id: Union[Tuple[int, int], str],
+        set_value: Optional[str] = None,
+    ) -> _CellTypes:
+        ...
 
     def save_workbook(self, filepath: str, filename: str) -> None:
         ...
@@ -49,7 +59,7 @@ class ExcelWriter:
 
     def _get_active_sheet(self, workbook: Workbook) -> Worksheet:
         if not workbook.active:
-            workbook.active = self._get_worksheet(0)
+            workbook.active = self.get_worksheet(0)
         # correct typing, worksheet is subclass of _WorkbookChild
         return workbook.active  # type: ignore
 
@@ -59,10 +69,10 @@ class ExcelWriter:
 
     def create_sheet(self, sheet_name: str, position: Optional[int] = None) -> None:
         self._workbook.create_sheet(sheet_name, position)
-        self.set_current_sheet(sheet_name)
+        self.set_active_sheet(sheet_name)
 
     def rename_sheet(self, sheet: Union[str, int], new_sheet_name: str) -> None:
-        sheet_obj = self._get_worksheet(sheet)
+        sheet_obj = self.get_worksheet(sheet)
         sheet_obj.title = new_sheet_name
 
     def save_workbook(self, filepath: str, filename: str) -> None:
@@ -93,7 +103,7 @@ class ExcelWriter:
         cell_id: Union[Tuple[int, int], str],
         set_value: Optional[str] = None,
     ) -> Cell:
-        sheet_object = self._get_worksheet(sheet)
+        sheet_object = self.get_worksheet(sheet)
 
         if isinstance(cell_id, tuple):
             cell = self._get_cell_by_row_col(sheet_object, row_col=cell_id)
@@ -113,23 +123,23 @@ class ExcelWriter:
         return sheet[cell_notation]
 
     @overload
-    def _get_worksheet(self, sheet: str) -> Worksheet:
+    def get_worksheet(self, sheet: str) -> Worksheet:
         ...
 
     @overload
-    def _get_worksheet(self, sheet: int) -> Worksheet:
+    def get_worksheet(self, sheet: int) -> Worksheet:
         ...
 
-    def _get_worksheet(self, sheet: Union[str, int]):
+    def get_worksheet(self, sheet: Union[str, int]) -> Worksheet:
         if isinstance(sheet, str):
             return self._workbook[sheet]
         if isinstance(sheet, int):
             return self._workbook.worksheets[sheet]
         raise ValueError(f"invalid sheet argument {sheet}")
 
-    def set_current_sheet(self, sheet: Optional[Union[str, int]] = None) -> None:
+    def set_active_sheet(self, sheet: Optional[Union[str, int]] = None) -> None:
         """Sets current sheet, if sheet is not provided, defaults to first sheet"""
         if sheet is None:
             self.active_sheet = self._workbook.worksheets[0]
             return
-        self.active_sheet = self._get_worksheet(sheet)
+        self.active_sheet = self.get_worksheet(sheet)
