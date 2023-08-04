@@ -10,7 +10,7 @@ class WeeklySalesStatsGenerator:
     def create_new_week_tab(self) -> None:
         latest_tab_name = self.writer.worksheets[0]
         new_tab_name = self._increment_tab_week(latest_tab_name)
-        self.writer.create_sheet(new_tab_name)
+        self.writer.create_sheet(new_tab_name, 0)
 
     def _increment_tab_week(self, tab_name: str, increment: int = 1) -> str:
         previous_week = tab_name[-2:]
