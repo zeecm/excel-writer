@@ -20,15 +20,15 @@ class TestExcelWriter:
         ]
 
     def test_writer_class(self):
-        assert self.writer.worksheets == ("original_sheet",)
+        assert self.writer.worksheet_names == ("original_sheet",)
 
     def test_rename_sheet(self):
         self.writer.rename_sheet(0, new_sheet_name="new_sheet_name")
-        assert self.writer.worksheets == ("new_sheet_name",)
+        assert self.writer.worksheet_names == ("new_sheet_name",)
 
     def test_create_sheet(self):
         self.writer.create_sheet("new_sheet")
-        assert self.writer.worksheets == ("original_sheet", "new_sheet")
+        assert self.writer.worksheet_names == ("original_sheet", "new_sheet")
 
     @pytest.mark.parametrize(
         "sheet_names, expected_order",
@@ -48,7 +48,7 @@ class TestExcelWriter:
     ):
         for sheet in sheet_names:
             self.writer.create_sheet(sheet)
-        assert self.writer.worksheets == expected_order
+        assert self.writer.worksheet_names == expected_order
 
     def test_save_workbook(self):
         with TemporaryDirectory() as tmpdir:
@@ -88,4 +88,4 @@ class TestExcelWriter:
 def test_excel_writer_context_manager():
     context_manager = None
     with ExcelWriterContextManager(default_sheet_name="test_sheet") as context_manager:
-        assert context_manager.worksheets == ("test_sheet",)
+        assert context_manager.worksheet_names == ("test_sheet",)

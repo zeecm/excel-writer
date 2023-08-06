@@ -5,4 +5,4 @@ requires = ["setuptools"]
 profile="black"
 
 [tool.pyright]
-exclude = ["zc_flightplan_toolkit/qdesigner_generated_ui/*"]
+exclude = ["excel_writer/utils.py"]

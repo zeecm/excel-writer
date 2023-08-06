@@ -18,9 +18,10 @@ class WeeklySalesStatsGenerator:
             self.writer.create_sheet(
                 sheet_name=new_tab_name, position=0, from_worksheet=template_sheet
             )
+            self.writer.get_worksheet(new_tab_name).sheet_view.showGridLines = False
 
     def _get_new_tab_name(self) -> str:
-        latest_tab_name = self.writer.worksheets[0]
+        latest_tab_name = self.writer.worksheet_names[0]
         return self._increment_tab_week(latest_tab_name)
 
     def _increment_tab_week(self, tab_name: str, increment: int = 1) -> str:
@@ -49,5 +50,5 @@ class WeeklySalesStatsGenerator:
         end_date = date_range.end_date.strftime("%d/%m/%Y")
         return f"({start_day}~{end_date})"
 
-    def save_file(self, filepath: str, filename: str) -> None:
-        self.writer.save_workbook(filepath, filename)
+    def save_file(self, filename: str, dest_filepath: str = ".") -> None:
+        self.writer.save_workbook(filepath=dest_filepath, filename=filename)

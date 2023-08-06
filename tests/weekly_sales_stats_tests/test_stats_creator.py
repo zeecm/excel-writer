@@ -12,7 +12,7 @@ class TestWeeklySalesStatsGenerator:
 
     def test_create_new_week_tab(self):
         self.generator.create_new_week_tab()
-        assert self.generator.writer.worksheets[0] == "Week 25"
+        assert self.generator.writer.worksheet_names[0] == "Week 25"
 
     def test_set_data_summary_date(self):
         self.generator.create_new_week_tab()

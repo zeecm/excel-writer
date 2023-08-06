@@ -4,10 +4,13 @@ import os
 from typing import List, Optional, Protocol, Tuple, Type, Union, overload
 
 from loguru import logger
-from openpyxl import Workbook, load_workbook
+from openpyxl import load_workbook
 from openpyxl.cell import Cell
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
+from openpyxl.workbook.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
+from excel_writer.utils import copy_sheet
 
 _CellTypes = Type[Cell]
 
@@ -15,7 +18,7 @@ _CellID = Union[Tuple[int, int], str]
 
 
 class Writer(Protocol):
-    worksheets: Tuple[str, ...]
+    worksheet_names: Tuple[str, ...]
 
     def cell(
         self,
@@ -71,7 +74,7 @@ class ExcelWriter:
         return workbook.active  # type: ignore
 
     @property
-    def worksheets(self) -> Tuple[str, ...]:
+    def worksheet_names(self) -> Tuple[str, ...]:
         return tuple(self._workbook.sheetnames)
 
     def create_sheet(
@@ -83,15 +86,8 @@ class ExcelWriter:
         self._workbook.create_sheet(sheet_name, position)
         self.set_active_sheet(sheet_name)
         if from_worksheet is not None:
-            new_worksheet = self.get_worksheet(sheet_name)
-            self._copy_rows_from_worksheet(from_worksheet, to_worksheet=new_worksheet)
-
-    def _copy_rows_from_worksheet(
-        self, from_worksheet: Worksheet, to_worksheet: Worksheet
-    ) -> Worksheet:
-        for row in from_worksheet.iter_rows(values_only=True):
-            to_worksheet.append(row)
-        return to_worksheet
+            to_sheet = self.get_worksheet(sheet_name)
+            copy_sheet(from_worksheet, to_sheet)
 
     def rename_sheet(self, sheet: Union[str, int], new_sheet_name: str) -> None:
         sheet_obj = self.get_worksheet(sheet)
