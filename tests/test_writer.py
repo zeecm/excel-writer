@@ -1,15 +1,23 @@
 import os
 from tempfile import TemporaryDirectory
-from typing import Tuple
+from typing import List, Tuple
 
 import pytest
 
-from excel_writer.writer import ExcelWriter
+from excel_writer.writer import ExcelWriter, ExcelWriterContextManager
 
 
 class TestExcelWriter:
     def setup_method(self):
         self.writer = ExcelWriter(default_sheet_name="original_sheet")
+
+    @pytest.fixture
+    def fixture_test_array(self) -> List[List[str]]:
+        return [
+            ["this", "is", "a", "test", "array"],
+            ["row", "two", "of", "test", "array"],
+            ["final", "row", "of", "test", "array"],
+        ]
 
     def test_writer_class(self):
         assert self.writer.worksheets == ("original_sheet",)
@@ -66,12 +74,18 @@ class TestExcelWriter:
         cell = self.writer.cell(0, (1, 2), set_value="test_value")
         assert cell.value == "test_value"
 
-    def test_paste_array(self):
-        array = [
-            ["this", "is", "a", "test", "array"],
-            ["row", "two", "of", "test", "array"],
-            ["final", "row", "of", "test", "array"],
-        ]
-        self.writer.paste_array(0, array, start_cell="B4")
+    def test_paste_array(self, fixture_test_array: List[List[str]]):
+        self.writer.paste_array(0, fixture_test_array, start_cell="B4")
         b4_cell = self.writer.cell(0, "b4")
         assert b4_cell.value == "this"
+
+    def test_copy_worksheet(self, fixture_test_array: List[List[str]]):
+        self.writer.paste_array(0, fixture_test_array)
+        copied_worksheet = self.writer.copy_worksheet(0)
+        assert copied_worksheet.cell(3, 1).value == "final"
+
+
+def test_excel_writer_context_manager():
+    context_manager = None
+    with ExcelWriterContextManager(default_sheet_name="test_sheet") as context_manager:
+        assert context_manager.worksheets == ("test_sheet",)

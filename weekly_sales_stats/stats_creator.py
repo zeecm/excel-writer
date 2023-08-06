@@ -1,7 +1,10 @@
+import os
 from typing import Optional, Union
 
-from excel_writer.writer import ExcelWriter, Writer
+from excel_writer.writer import ExcelWriter, ExcelWriterContextManager, Writer
 from weekly_sales_stats.utils import DateRange, calculate_week_dates
+
+TEMPLATE_PATH = os.path.join("templates", "template_weekly_stats.xlsx")
 
 
 class WeeklySalesStatsGenerator:
@@ -9,9 +12,16 @@ class WeeklySalesStatsGenerator:
         self.writer = writer or ExcelWriter(existing_workbook=previous_sheet_location)
 
     def create_new_week_tab(self) -> None:
+        new_tab_name = self._get_new_tab_name()
+        with ExcelWriterContextManager(TEMPLATE_PATH) as writer:
+            template_sheet = writer.copy_worksheet(0)
+            self.writer.create_sheet(
+                sheet_name=new_tab_name, position=0, from_worksheet=template_sheet
+            )
+
+    def _get_new_tab_name(self) -> str:
         latest_tab_name = self.writer.worksheets[0]
-        new_tab_name = self._increment_tab_week(latest_tab_name)
-        self.writer.create_sheet(new_tab_name, 0)
+        return self._increment_tab_week(latest_tab_name)
 
     def _increment_tab_week(self, tab_name: str, increment: int = 1) -> str:
         previous_week = tab_name[-2:]
