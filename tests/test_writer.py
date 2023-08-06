@@ -65,3 +65,13 @@ class TestExcelWriter:
     def test_cell_using_row_col(self):
         cell = self.writer.cell(0, (1, 2), set_value="test_value")
         assert cell.value == "test_value"
+
+    def test_paste_array(self):
+        array = [
+            ["this", "is", "a", "test", "array"],
+            ["row", "two", "of", "test", "array"],
+            ["final", "row", "of", "test", "array"],
+        ]
+        self.writer.paste_array(0, array, start_cell="B4")
+        b4_cell = self.writer.cell(0, "b4")
+        assert b4_cell.value == "this"

@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import os
-from typing import Optional, Protocol, Tuple, Type, Union, overload
+from typing import List, Optional, Protocol, Tuple, Type, Union, overload
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.cell import Cell
+from openpyxl.utils import coordinate_to_tuple, get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 _CellTypes = Type[Cell]
+
+_CellID = Union[Tuple[int, int], str]
 
 
 class Writer(Protocol):
@@ -100,7 +105,7 @@ class ExcelWriter:
     def cell(
         self,
         sheet: Union[str, int],
-        cell_id: Union[Tuple[int, int], str],
+        cell_id: _CellID,
         set_value: Optional[str] = None,
     ) -> Cell:
         sheet_object = self.get_worksheet(sheet)
@@ -143,3 +148,24 @@ class ExcelWriter:
             self.active_sheet = self._workbook.worksheets[0]
             return
         self.active_sheet = self.get_worksheet(sheet)
+
+    def paste_array(
+        self, sheet: Union[str, int], array: List[List[str]], start_cell: _CellID = "A1"
+    ) -> None:
+        cell_id = start_cell
+        if isinstance(cell_id, str):
+            cell_id = coordinate_to_tuple(cell_id)
+
+        current_row, current_col = cell_id
+        for row in array:
+            for value in row:
+                notation = self._convert_row_col_to_notation((current_row, current_col))
+                self.cell(sheet, notation, set_value=value)
+                current_col += 1
+            current_row += 1
+            current_col = cell_id[1]
+
+    def _convert_row_col_to_notation(self, row_col: Tuple[int, int]) -> str:
+        row, col = row_col
+        col_letter = get_column_letter(col)
+        return f"{col_letter}{row}"
