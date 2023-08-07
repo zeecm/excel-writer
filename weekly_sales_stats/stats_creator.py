@@ -11,7 +11,11 @@ class WeeklySalesStatsGenerator:
     def __init__(self, previous_sheet_location: str, writer: Optional[Writer] = None):
         self.writer = writer or ExcelWriter(existing_workbook=previous_sheet_location)
 
-    def create_new_week_tab(self) -> None:
+    def generate_new_week_tab(self) -> None:
+        self._create_new_week_tab()
+        self._set_data_summary_date()
+
+    def _create_new_week_tab(self) -> None:
         new_tab_name = self._get_new_tab_name()
         with ExcelWriterContextManager(TEMPLATE_PATH) as writer:
             template_sheet = writer.copy_worksheet(0)
