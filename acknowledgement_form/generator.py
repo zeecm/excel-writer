@@ -1,6 +1,6 @@
 from acknowledgement_form.constants import TEMPLATE_FILEPATH, Field
 from acknowledgement_form.quotation_reader import get_fields_from_quotation_pdf
-from excel_writer.writer import ExcelWriter, Writer
+from excel_writer.writer import ExcelWriter
 
 
 def load_template(template_filepath: str = TEMPLATE_FILEPATH) -> ExcelWriter:
@@ -11,10 +11,7 @@ def set_field_value(
     writer: ExcelWriter, field: Field, value_to_set: str
 ) -> ExcelWriter:
     if not value_to_set:
-        value_to_set = "-"
-        if field == Field.CLASS:
-            value_to_set = "Not Involved"
-
+        value_to_set = "Not Involved" if field == Field.CLASS else "-"
     field_cell_id = field.value.cell_id
     field_template_str = field.value.template_str
 
@@ -58,8 +55,8 @@ def create_job_ack_from_pdf(
 
 
 if __name__ == "__main__":
-    filename = "test.xlsx"
-    pdf_filepath = (
+    test_filename = "test.xlsx"
+    test_pdf_filepath = (
         "tests/acknowledgement_form_tests/test_files/sample_quo_with_version.pdf"
     )
-    create_job_ack_from_pdf(pdf_filepath=pdf_filepath, filename=filename)
+    create_job_ack_from_pdf(pdf_filepath=test_pdf_filepath, filename=test_filename)
