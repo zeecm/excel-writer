@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from acknowledgement_form.generator import TEMPLATE_FILEPATH, Field, set_field_value
+from acknowledgement_form.generator import Field, set_field_value
 from excel_writer.writer import ExcelWriter
 
 TEST_FILEPATH = os.path.join(

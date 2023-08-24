@@ -25,6 +25,11 @@ class Field(Enum):
     DURATION = FieldInfo("B13", "<duration>")
 
 
+class FieldValue(NamedTuple):
+    field: Field
+    value: str
+
+
 def load_template(template_filepath: str = TEMPLATE_FILEPATH) -> ExcelWriter:
     return ExcelWriter(template_filepath)
 
