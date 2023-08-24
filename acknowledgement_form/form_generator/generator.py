@@ -1,5 +1,7 @@
-from acknowledgement_form.constants import TEMPLATE_FILEPATH, Field
-from acknowledgement_form.quotation_reader import get_fields_from_quotation_pdf
+from acknowledgement_form.form_generator.constants import TEMPLATE_FILEPATH, Field
+from acknowledgement_form.form_generator.quotation_reader import (
+    get_fields_from_quotation_pdf,
+)
 from excel_writer.writer import ExcelWriter
 
 

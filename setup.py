@@ -12,6 +12,7 @@ setup(
         "openpyxl",
         "loguru",
         "pypdf",
+        "appjar",
     ],
     extras_require={
         "dev": [

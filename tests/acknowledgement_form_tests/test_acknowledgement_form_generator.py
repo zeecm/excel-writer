@@ -2,8 +2,8 @@ import os
 
 import pytest
 
-from acknowledgement_form.constants import Field
-from acknowledgement_form.generator import set_field_value
+from acknowledgement_form.form_generator.constants import Field
+from acknowledgement_form.form_generator.generator import set_field_value
 from excel_writer.writer import ExcelWriter
 
 TEST_FILEPATH = os.path.join(
