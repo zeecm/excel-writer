@@ -3,7 +3,7 @@ from typing import Dict
 import pytest
 from pypdf import PdfReader
 
-from acknowledgement_form.generator import Field
+from acknowledgement_form.constants import Field
 from acknowledgement_form.quotation_reader import (
     get_client_name,
     get_drawing_number,

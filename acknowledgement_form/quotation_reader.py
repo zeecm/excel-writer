@@ -3,7 +3,7 @@ from typing import Dict
 from loguru import logger
 from pypdf import PdfReader
 
-from acknowledgement_form.generator import Field
+from acknowledgement_form.constants import Field
 
 CLIENT_NAME_TEXT_COORDINATES = "18.48, 590.065, 217.986, 599.048"
 

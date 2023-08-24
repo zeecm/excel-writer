@@ -1,33 +1,6 @@
-import os
-from enum import Enum
-from typing import NamedTuple
-
+from acknowledgement_form.constants import TEMPLATE_FILEPATH, Field
+from acknowledgement_form.quotation_reader import get_fields_from_quotation_pdf
 from excel_writer.writer import ExcelWriter, Writer
-
-TEMPLATE_FILEPATH = os.path.join(
-    "acknowledgement_form", "template", "template_job_ack.xlsx"
-)
-
-
-class FieldInfo(NamedTuple):
-    cell_id: str
-    template_str: str
-
-
-class Field(Enum):
-    CLIENT_NAME = FieldInfo("B3", "<client_name>")
-    JOB_NUM = FieldInfo("B4", "<job_num>")
-    PO_NUM = FieldInfo("B5", "<po_num>")
-    QUOTATION_NUM = FieldInfo("B6", "<quotation_num>")
-    VESSEL = FieldInfo("B7", "<vessel>")
-    DRAWING_NUM = FieldInfo("B11", "<drawing_num>")
-    CLASS = FieldInfo("B12", "<class>")
-    DURATION = FieldInfo("B13", "<duration>")
-
-
-class FieldValue(NamedTuple):
-    field: Field
-    value: str
 
 
 def load_template(template_filepath: str = TEMPLATE_FILEPATH) -> ExcelWriter:
@@ -71,6 +44,22 @@ def create_job_ack(
     writer.save_workbook(filepath, filename)
 
 
+def create_job_ack_from_pdf(
+    pdf_filepath: str,
+    filename: str,
+    filepath: str = ".",
+    template_filepath: str = TEMPLATE_FILEPATH,
+) -> None:
+    fields = get_fields_from_quotation_pdf(pdf_filepath)
+    writer = load_template(template_filepath)
+    for field, value in fields.items():
+        writer = set_field_value(writer, field, value)
+    writer.save_workbook(filepath, filename)
+
+
 if __name__ == "__main__":
-    filename = "test.xls"
-    create_job_ack(filename)
+    filename = "test.xlsx"
+    pdf_filepath = (
+        "tests/acknowledgement_form_tests/test_files/sample_quo_with_version.pdf"
+    )
+    create_job_ack_from_pdf(pdf_filepath=pdf_filepath, filename=filename)
