@@ -108,19 +108,25 @@ def get_duration(page_text: str) -> str:
         return "N/A"
 
     duration_start_index = page_text.find(duration_prefix) + len(duration_prefix)
+    duration_end_index = _get_end_index_for_duration(page_text, duration_start_index)
+    return page_text[duration_start_index:duration_end_index].strip()
 
-    duration_end_prefix = "Delivery:"
-    duration_end_index = page_text.find(duration_end_prefix)
-    return ", ".join(
-        page_text[duration_start_index:duration_end_index]
-        .strip()
-        .replace(",", "")
-        .split("\n")
-    )
+
+def _get_end_index_for_duration(page_text: str, start_index) -> int:
+    possible_end_strs = ["day", "month", "week"]
+    for end_str in possible_end_strs:
+        end_str_index = page_text.lower().find(end_str, start_index)
+        if end_str_index != -1:
+            index = end_str_index + len(end_str)
+            if page_text[index].lower() == "s":
+                index = index + 1
+            return index
+    alterative_duration_end_prefix = "Delivery:"
+    return page_text.find(alterative_duration_end_prefix, start_index)
 
 
 def get_drawing_number(page_text: str) -> str:
-    drawing_number_prefix = "Drawing No.:\n"
+    drawing_number_prefix = "Drawing No.:"
 
     if drawing_number_prefix not in page_text:
         logger.warning("no drawing number found")

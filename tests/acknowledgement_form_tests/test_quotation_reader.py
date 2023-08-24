@@ -120,11 +120,11 @@ def test_get_vessel_class(pdf_location: str, expected_class: str):
         ),
         (
             "tests/acknowledgement_form_tests/test_files/sample_quo_2.pdf",
-            "5-6 months upon confirmation, receipt of downpayment and class approved drawings",
+            "5-6 months",
         ),
         (
             "tests/acknowledgement_form_tests/test_files/sample_quo_with_version.pdf",
-            "5-6 working days upon receipt of confirmation",
+            "5-6 working days",
         ),
     ],
 )
@@ -184,7 +184,7 @@ def test_get_drawing_number(pdf_location: str, expected_drawing_number: str):
                 Field.VESSEL: "N/A",
                 Field.CLASS: "BV",
                 Field.DRAWING_NUM: "-",
-                Field.DURATION: "5-6 months upon confirmation, receipt of downpayment and class approved drawings",
+                Field.DURATION: "5-6 months",
             },
         ),
         (
@@ -195,7 +195,7 @@ def test_get_drawing_number(pdf_location: str, expected_drawing_number: str):
                 Field.VESSEL: "Valaris 106",
                 Field.CLASS: "Not Involved",
                 Field.DRAWING_NUM: "-",
-                Field.DURATION: "5-6 working days upon receipt of confirmation",
+                Field.DURATION: "5-6 working days",
             },
         ),
     ],
