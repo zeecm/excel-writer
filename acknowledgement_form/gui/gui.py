@@ -1,3 +1,5 @@
+from typing import List, Tuple, Union
+
 from appJar import gui
 from loguru import logger
 from pandas import ExcelWriter
@@ -10,6 +12,19 @@ from acknowledgement_form.form_generator.quotation_reader import (
 
 
 class AcknowledgementFormGeneratorGUI:
+    LABEL_ENTRIES: List[Tuple[Union[str, Field], str]] = [
+        ("pdf_filepath", "Quotation PDF Filepath:"),
+        (Field.CLIENT_NAME, "Client Name:"),
+        (Field.JOB_NUM, "Job No.:"),
+        (Field.PO_NUM, "PO No.:"),
+        (Field.QUOTATION_NUM, "Quotation No.:"),
+        (Field.VESSEL, "Vessel:"),
+        (Field.DRAWING_NUM, "Drawing No.:"),
+        (Field.CLASS, "Class:"),
+        (Field.DURATION, "Duration:"),
+        ("output_filename", "Output File Name:"),
+    ]
+
     def __init__(self):
         self.app = gui("Acknowledgement Form Generator", useTtk=True)
         self.writer = ExcelWriter
@@ -30,21 +45,12 @@ class AcknowledgementFormGeneratorGUI:
         )
 
     def _setup_entries(self):
-        self.app.addLabelEntry("pdf_filepath", label="Quotation PDF Filepath:")
-        self.app.addLabelEntry(Field.CLIENT_NAME, label="Client Name:")
-        self.app.addLabelEntry(Field.JOB_NUM, label="Job No.:")
-        self.app.addLabelEntry(Field.PO_NUM, label="PO No.:")
-        self.app.addLabelEntry(Field.QUOTATION_NUM, label="Quotation No.:")
-        self.app.addLabelEntry(Field.VESSEL, label="Vessel:")
-        self.app.addLabelEntry(Field.DRAWING_NUM, label="Drawing No.:")
-        self.app.addLabelEntry(Field.CLASS, label="Class:")
-        self.app.addLabelEntry(Field.DURATION, label="Duration:")
-        self.app.addLabelEntry("output_filename", label="Output File Name:")
+        for entry_id, entry_label in self.LABEL_ENTRIES:
+            self.app.addLabelEntry(entry_id, label=entry_label)
 
     def _setup_change_functions(self):
-        labels = ["pdf_filepath", "output_filename"] + list(Field)
-        for label in labels:
-            self.app.setEntryChangeFunction(label, self._update_fields)  # type: ignore
+        for entry_id, _ in self.LABEL_ENTRIES:
+            self.app.setEntryChangeFunction(entry_id, self._update_fields)  # type: ignore
 
     def _setup_buttons(self):
         self.app.addButton("Select Quotation PDF", self._pdf_file_select)
@@ -85,12 +91,12 @@ class AcknowledgementFormGeneratorGUI:
         quotation_number = str(self.app.getEntry(Field.QUOTATION_NUM))
         return f"ACK - JN{job_number} - {quotation_number} - {client_name}"
 
+    def _update_fields(self):
+        self._set_output_filename()
+
     def _set_output_filename(self):
         output_filename = self._generate_output_filename_from_fields()
         self.app.setEntry("output_filename", output_filename)
-
-    def _update_fields(self):
-        self._set_output_filename()
 
     def _generate_job_ack(self):
         for field in Field:
