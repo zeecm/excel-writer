@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from appJar import gui
 from loguru import logger
@@ -98,22 +98,45 @@ class AcknowledgementFormGeneratorGUI:
         output_filename = self._generate_output_filename_from_fields()
         self.app.setEntry("output_filename", output_filename)
 
+    def _set_field_value(self, field: str, value_to_set: str):
+        self.writer = set_field_value(self.writer, field, value_to_set)
+
+    def _save_file(self, button):
+        if not self._check_entries_not_empty():
+            return
+        self._load_writer()
+        self._generate_job_ack()
+        full_filepath = self._get_full_output_filepath()
+        if full_filepath is not None:
+            self.writer.save_workbook("", filename=full_filepath)
+            logger.info(f"saved workbook to {full_filepath}")
+
+    def _check_entries_not_empty(self) -> bool:
+        if missing_entries := [
+            entry_label
+            for entry_id, entry_label in self.LABEL_ENTRIES
+            if not str(self.app.getEntry(entry_id))
+        ]:
+            self._warning_window_for_missing_entries(missing_entries)
+            return False
+        return True
+
+    def _warning_window_for_missing_entries(self, missing_entries: List[str]):
+        missing_entries_str = "\n".join(missing_entries)
+        self.app.warningBox(
+            title="Missing Data",
+            message=f"Entries are missing: \n\n{missing_entries_str}",
+        )
+
+    def _load_writer(self):
+        self.writer = load_template()
+
     def _generate_job_ack(self):
         for field in Field:
             field_value = str(self.app.getEntry(field))
             self._set_field_value(field, field_value)
 
-    def _set_field_value(self, field: str, value_to_set: str):
-        self.writer = set_field_value(self.writer, field, value_to_set)
-
-    def _save_file(self, button):
-        self._load_writer()
-        self._generate_job_ack()
-        full_filepath = self._get_full_output_filepath()
-        self.writer.save_workbook("", filename=full_filepath)
-        logger.info(f"saved workbook to {full_filepath}")
-
-    def _get_full_output_filepath(self):
+    def _get_full_output_filepath(self) -> Optional[str]:
         output_filename = str(self.app.getEntry("output_filename"))
         if filepath := self.app.saveBox(
             fileName=output_filename,
@@ -121,10 +144,7 @@ class AcknowledgementFormGeneratorGUI:
             fileTypes=[("Excel Workbook", "*.xlsx")],
         ):
             return filepath
-        return f"./{output_filename}"
-
-    def _load_writer(self):
-        self.writer = load_template()
+        return None
 
     def go(self):
         self.app.go()
