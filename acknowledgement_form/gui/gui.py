@@ -1,5 +1,6 @@
 from appJar import gui
 from loguru import logger
+from pandas import ExcelWriter
 
 from acknowledgement_form.form_generator.constants import Field
 from acknowledgement_form.form_generator.generator import load_template, set_field_value
@@ -11,7 +12,7 @@ from acknowledgement_form.form_generator.quotation_reader import (
 class AcknowledgementFormGeneratorGUI:
     def __init__(self):
         self.app = gui("Acknowledgement Form Generator", useTtk=True)
-        self.writer = load_template()
+        self.writer = ExcelWriter
         self._setup_gui()
 
     def _setup_gui(self):
@@ -100,6 +101,7 @@ class AcknowledgementFormGeneratorGUI:
         self.writer = set_field_value(self.writer, field, value_to_set)
 
     def _save_file(self, button):
+        self._load_writer()
         self._generate_job_ack()
         full_filepath = self._get_full_output_filepath()
         self.writer.save_workbook("", filename=full_filepath)
@@ -114,6 +116,9 @@ class AcknowledgementFormGeneratorGUI:
         ):
             return filepath
         return f"./{output_filename}"
+
+    def _load_writer(self):
+        self.writer = load_template()
 
     def go(self):
         self.app.go()

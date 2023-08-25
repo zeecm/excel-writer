@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from loguru import logger
 from pypdf import PdfReader
@@ -16,25 +16,41 @@ def get_fields_from_quotation_pdf(quotation_pdf_filepath: str) -> Dict[Field, st
 
 
 def _get_field_values_from_pdf_reader(reader: PdfReader) -> Dict[Field, str]:
-    for page_index, page in enumerate(reader.pages):
-        page_text = page.extract_text()
-        if page_index == 0:
-            client_name = get_client_name(page_text)
-            quotation_number = get_quotation_number(page_text)
-            vessel = get_vessel(page_text)
-            vessel_class = get_vessel_class(page_text)
-            drawing_number = get_drawing_number(page_text)
-        if "Duration:" in page_text:
-            duration = get_duration(page_text)
+    all_pages_text = _extract_text_from_pages(reader)
 
+    first_page_text = all_pages_text[0]
+    first_page_fields = _get_fields_from_first_page(first_page_text)
+
+    duration = _get_duration_from_pages(all_pages_text)
+
+    return first_page_fields | {Field.DURATION: duration}
+
+
+def _extract_text_from_pages(reader: PdfReader) -> List[str]:
+    return [page.extract_text() for page in reader.pages]
+
+
+def _get_fields_from_first_page(first_page_text: str) -> Dict[Field, str]:
+    client_name = get_client_name(first_page_text)
+    quotation_number = get_quotation_number(first_page_text)
+    vessel = get_vessel(first_page_text)
+    vessel_class = get_vessel_class(first_page_text)
+    drawing_number = get_drawing_number(first_page_text)
     return {
         Field.CLIENT_NAME: client_name,
         Field.QUOTATION_NUM: quotation_number,
         Field.VESSEL: vessel,
         Field.CLASS: vessel_class,
         Field.DRAWING_NUM: drawing_number,
-        Field.DURATION: duration,
     }
+
+
+def _get_duration_from_pages(all_pages_text: List[str]) -> str:
+    if page_with_duration := [
+        page_text for page_text in all_pages_text if "Duration:" in page_text
+    ]:
+        return get_duration(page_with_duration[0])
+    return "N/A"
 
 
 def get_client_name(page_text: str) -> str:
