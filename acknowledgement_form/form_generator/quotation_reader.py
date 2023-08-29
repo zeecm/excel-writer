@@ -127,6 +127,7 @@ def get_vessel_class(page_text: str) -> str:
 
 
 def get_duration(page_text: str) -> str:
+    logger.debug(page_text)
     duration_prefix = "Duration:\n"
 
     if duration_prefix not in page_text:
