@@ -2,8 +2,12 @@ import os
 
 import pytest
 
-from acknowledgement_form.form_generator.constants import Field
-from acknowledgement_form.form_generator.generator import set_field_value
+from acknowledgement_form.form_generator.constants import Content, Field
+from acknowledgement_form.form_generator.generator import (
+    load_template,
+    set_content,
+    set_field_value,
+)
 from excel_writer.writer import ExcelWriter
 
 TEST_FILEPATH = os.path.join(
@@ -35,3 +39,29 @@ def test_empty_class_set_to_not_involved():
     writer = set_field_value(writer, Field.CLASS, "")
     cell_value = str(writer.cell(0, Field.CLASS.value.cell_id).value)
     assert "Not Involved" in cell_value
+
+
+def test_load_template():
+    writer = load_template(TEST_FILEPATH)
+    assert isinstance(writer, ExcelWriter)
+
+
+class TestSetContent:
+    def setup_method(self):
+        contents = [
+            Content("title1", ["desc1", "desc2", "desc3"]),
+            Content("title2", ["desc1", "desc2", "desc3"]),
+            Content("title3", ["desc1", "desc2", "desc3"]),
+            Content("title4", ["desc1", "desc2", "desc3"]),
+        ]
+        self.writer = load_template(TEST_FILEPATH)
+        self.writer = set_content(self.writer, contents)
+
+    def test_signature_block_moved_correctly(self):
+        signature_start_cell = self.writer.cell(0, "B36")
+        expected_signature_start_value = str(signature_start_cell.value)
+        assert expected_signature_start_value == "Name of recipients"
+
+    def test_signature_block_cell_height(self):
+        worksheet = self.writer.active_sheet
+        assert worksheet.row_dimensions[36].height == 30

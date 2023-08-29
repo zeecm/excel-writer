@@ -5,10 +5,10 @@ from pypdf import PdfReader
 
 from acknowledgement_form.form_generator.constants import Field
 from acknowledgement_form.form_generator.quotation_reader import (
+    QuotationReader,
     get_client_name,
     get_drawing_number,
     get_duration,
-    get_fields_from_quotation_pdf,
     get_quotation_number,
     get_vessel,
     get_vessel_class,
@@ -203,4 +203,5 @@ def test_get_drawing_number(pdf_location: str, expected_drawing_number: str):
 def test_get_fields_from_quotation(
     pdf_location: str, expected_fields: Dict[Field, str]
 ):
-    assert get_fields_from_quotation_pdf(pdf_location) == expected_fields
+    quotation_reader = QuotationReader(pdf_location)
+    assert quotation_reader.get_fields() == expected_fields

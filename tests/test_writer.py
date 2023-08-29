@@ -3,8 +3,14 @@ from tempfile import TemporaryDirectory
 from typing import Tuple
 
 import pytest
+from openpyxl.styles import Font
 
-from excel_writer.writer import ExcelWriter
+from excel_writer.writer import (
+    DEFAULT_COLUMN_WIDTH,
+    DEFAULT_ROW_HEIGHT,
+    CellRange,
+    ExcelWriter,
+)
 
 
 class TestExcelWriter:
@@ -65,3 +71,28 @@ class TestExcelWriter:
     def test_cell_using_row_col(self):
         cell = self.writer.cell(0, (1, 2), set_value="test_value")
         assert cell.value == "test_value"
+
+    def test_move_range_with_dimensions(self):
+        self.writer.cell(0, "A1", set_value="a1")
+        self.writer.cell(0, "B2", set_value="b2")
+        self.writer.active_sheet.row_dimensions[1].height = 30
+        self.writer.active_sheet.column_dimensions["A"].width = 50
+        cell_range = CellRange(start_row=1, end_row=2, start_column=1, end_column=2)
+        self.writer.move_range(
+            0, cell_range, rows_to_move=5, columns_to_move=5, move_dimensions=True
+        )
+        assert self.writer.cell(0, "F6").value == "a1"
+        assert self.writer.cell(0, "G7").value == "b2"
+        assert self.writer.active_sheet.row_dimensions[6].height == 30
+        assert self.writer.active_sheet.column_dimensions["F"].width == 50
+        assert self.writer.active_sheet.row_dimensions[1].height == DEFAULT_ROW_HEIGHT
+        assert (
+            self.writer.active_sheet.column_dimensions["A"].width
+            == DEFAULT_COLUMN_WIDTH
+        )
+
+    def test_get_cell_style(self):
+        ft = Font(color="FF0000")
+        self.writer.cell(0, "A1").font = ft
+        cell_style = self.writer.cell_style(0, "A1")
+        assert cell_style.font == ft

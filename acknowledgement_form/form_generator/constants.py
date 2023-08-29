@@ -1,6 +1,8 @@
 import os
 from enum import Enum
-from typing import NamedTuple
+from typing import List, NamedTuple
+
+from excel_writer.writer import CellRange
 
 TEMPLATE_FILEPATH = os.path.join(
     "acknowledgement_form", "template", "template_job_ack.xlsx"
@@ -26,3 +28,16 @@ class Field(Enum):
 class FieldValue(NamedTuple):
     field: Field
     value: str
+
+
+class Content(NamedTuple):
+    title: str
+    descriptions: List[str]
+
+
+FIRST_CONTENT_TITLE_CELL = "B16"
+FIRST_CONTENT_DESCRIPTION_CELL = "B17"
+
+SIGNATURE_BLOCK_CELL_RANGE = CellRange(
+    start_row=19, start_column=2, end_row=28, end_column=3
+)

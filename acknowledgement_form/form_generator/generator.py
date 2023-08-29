@@ -1,12 +1,22 @@
-from acknowledgement_form.form_generator.constants import TEMPLATE_FILEPATH, Field
-from acknowledgement_form.form_generator.quotation_reader import (
-    get_fields_from_quotation_pdf,
+from typing import List
+
+from loguru import logger
+
+from acknowledgement_form.form_generator.constants import (
+    FIRST_CONTENT_DESCRIPTION_CELL,
+    FIRST_CONTENT_TITLE_CELL,
+    SIGNATURE_BLOCK_CELL_RANGE,
+    TEMPLATE_FILEPATH,
+    Content,
+    Field,
 )
 from excel_writer.writer import ExcelWriter
 
 
 def load_template(template_filepath: str = TEMPLATE_FILEPATH) -> ExcelWriter:
-    return ExcelWriter(template_filepath)
+    return ExcelWriter(
+        template_filepath, default_row_height=15.75, default_column_width=51.43
+    )
 
 
 def set_field_value(
@@ -27,38 +37,43 @@ def set_field_value(
     return writer
 
 
-def create_job_ack(
-    filename: str, filepath: str = ".", template_filepath: str = TEMPLATE_FILEPATH
-) -> None:
-    query_mapping = {}
-    for field in Field:
-        field_value = input(f"{field.name}: ")
-        query_mapping |= {field: field_value}
+def set_content(writer: ExcelWriter, contents: List[Content]) -> ExcelWriter:
+    content_title_style = writer.cell_style(0, FIRST_CONTENT_TITLE_CELL)
+    content_description_style = writer.cell_style(0, FIRST_CONTENT_DESCRIPTION_CELL)
 
-    writer = load_template(template_filepath)
+    start_cell = writer.cell(0, FIRST_CONTENT_TITLE_CELL)
 
-    for field, value in query_mapping.items():
-        writer = set_field_value(writer, field, value)
+    current_row = start_cell.row
+    column = start_cell.column
 
-    writer.save_workbook(filepath, filename)
+    current_signature_range = SIGNATURE_BLOCK_CELL_RANGE
 
-
-def create_job_ack_from_pdf(
-    pdf_filepath: str,
-    filename: str,
-    filepath: str = ".",
-    template_filepath: str = TEMPLATE_FILEPATH,
-) -> None:
-    fields = get_fields_from_quotation_pdf(pdf_filepath)
-    writer = load_template(template_filepath)
-    for field, value in fields.items():
-        writer = set_field_value(writer, field, value)
-    writer.save_workbook(filepath, filename)
-
-
-if __name__ == "__main__":
-    test_filename = "test.xlsx"
-    test_pdf_filepath = (
-        "tests/acknowledgement_form_tests/test_files/sample_quo_with_version.pdf"
+    current_signature_range = writer.move_range(
+        0, current_signature_range, rows_to_move=100
     )
-    create_job_ack_from_pdf(pdf_filepath=test_pdf_filepath, filename=test_filename)
+
+    for title, descriptions in contents:
+        writer.cell(
+            0,
+            cell_id=(current_row, column),
+            set_value=title,
+            set_style=content_title_style,
+        )
+
+        for description_line in descriptions:
+            current_row += 1
+            writer.cell(
+                0,
+                cell_id=(current_row, column),
+                set_value=description_line,
+                set_style=content_description_style,
+            )
+
+        current_row += 2
+
+    rows_to_move = current_row - current_signature_range.start_row
+    current_signature_range = writer.move_range(
+        0, current_signature_range, rows_to_move=rows_to_move
+    )
+
+    return writer

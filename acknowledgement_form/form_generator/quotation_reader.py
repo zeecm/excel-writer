@@ -1,33 +1,36 @@
+import re
 from typing import Dict, List
 
 from loguru import logger
 from pypdf import PdfReader
 
-from acknowledgement_form.form_generator.constants import Field
+from acknowledgement_form.form_generator.constants import Content, Field
 
 CLIENT_NAME_TEXT_COORDINATES = "18.48, 590.065, 217.986, 599.048"
 
 SAMPLE_PDF = "tests/acknowledgement_form_tests/test_files/sample_quo.pdf"
 
 
-def get_fields_from_quotation_pdf(quotation_pdf_filepath: str) -> Dict[Field, str]:
-    reader = PdfReader(quotation_pdf_filepath)
-    return _get_field_values_from_pdf_reader(reader)
+class QuotationReader:
+    def __init__(self, quotation_pdf_filepath: str):
+        self._reader = PdfReader(quotation_pdf_filepath)
+        self.pages = self._reader.pages
+        self.pages_text = [page.extract_text() for page in self.pages]
+
+    def get_fields(self) -> Dict[Field, str]:
+        return _get_field_values_from_pages(self.pages_text)
+
+    def get_content(self) -> List[Content]:
+        return _get_content_from_pages(self.pages_text)
 
 
-def _get_field_values_from_pdf_reader(reader: PdfReader) -> Dict[Field, str]:
-    all_pages_text = _extract_text_from_pages(reader)
-
+def _get_field_values_from_pages(all_pages_text: List[str]) -> Dict[Field, str]:
     first_page_text = all_pages_text[0]
     first_page_fields = _get_fields_from_first_page(first_page_text)
 
     duration = _get_duration_from_pages(all_pages_text)
 
     return first_page_fields | {Field.DURATION: duration}
-
-
-def _extract_text_from_pages(reader: PdfReader) -> List[str]:
-    return [page.extract_text() for page in reader.pages]
 
 
 def _get_fields_from_first_page(first_page_text: str) -> Dict[Field, str]:
@@ -51,6 +54,13 @@ def _get_duration_from_pages(all_pages_text: List[str]) -> str:
     ]:
         return get_duration(page_with_duration[0])
     return "N/A"
+
+
+def _get_content_from_pages(all_pages_text: List[str]) -> List[Content]:
+    contents = []
+    for page_text in all_pages_text:
+        contents.extend(get_content(page_text))
+    return contents
 
 
 def get_client_name(page_text: str) -> str:
@@ -153,3 +163,42 @@ def get_drawing_number(page_text: str) -> str:
     )
     drawing_number_end_index = page_text.find("\n", drawing_number_start_index)
     return page_text[drawing_number_start_index:drawing_number_end_index].strip()
+
+
+def get_content(page_text: str) -> List[Content]:
+    item_titles = get_item_titles(page_text)
+    return get_item_description(page_text, item_titles)
+
+
+def get_item_titles(page_text: str) -> str:
+    page_lines = page_text.split("\n")
+    return [
+        page_lines[line_index + 1]
+        for line_index, line in enumerate(page_lines)
+        if re.match(r"\d+\.\s+", line)
+    ]
+
+
+def get_item_description(page_text: str, item_titles: List[str]) -> List[Content]:
+    page_lines = page_text.split("\n")
+    item_title_and_descriptions = []
+    for title in item_titles:
+        title_line_index = page_lines.index(title)
+        description_indices = _get_description_indices(title_line_index)
+        description = _get_descriptions_from_page_lines(page_lines, description_indices)
+        item_title_and_descriptions.append(Content(title, description))
+    return item_title_and_descriptions
+
+
+def _get_description_indices(title_line_index, description_lines: int = 2):
+    return [
+        title_line_index + additional_line
+        for additional_line in range(1, description_lines + 1)
+    ]
+
+
+def _get_descriptions_from_page_lines(
+    page_lines: List[str], description_indices: List[int]
+) -> List[str]:
+    description = [page_lines[index] for index in description_indices]
+    return [line for line in description if line.strip() != ""]
