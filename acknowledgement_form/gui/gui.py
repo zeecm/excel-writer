@@ -30,6 +30,7 @@ class AcknowledgementFormGeneratorGUI:
     CONTENT_TEXT_AREA_ID = "contents"
     TITLE_LINE = "Title: "
     DESCRIPTION_START_LINE = "Description:\n"
+    DESCRIPTION_END_BLOCK = "---ENDBLOCK---"
 
     def __init__(self):
         self.app = gui("Acknowledgement Form Generator", useTtk=True)
@@ -126,6 +127,7 @@ class AcknowledgementFormGeneratorGUI:
     ) -> str:
         for description_line in descriptions:
             content_text += f"{description_line} \n"
+        content_text += f"\n{self.DESCRIPTION_END_BLOCK}\n"
         return content_text
 
     def _update_fields(self):
@@ -203,18 +205,22 @@ class AcknowledgementFormGeneratorGUI:
         description_line_indexes: List[int] = []
 
         for line_index, line in enumerate(description_lines):
-            if line_index == 0:
-                continue
             if self._is_description_start_line(line):
+                continue
+            if self._is_end_of_description_block(line):
                 descriptions.append(
                     self._get_description_lines(
                         description_lines, description_line_indexes
                     )
                 )
                 description_line_indexes.clear()
-            else:
-                description_line_indexes.append(line_index)
+                continue
+            description_line_indexes.append(line_index)
+
         return descriptions
+
+    def _is_end_of_description_block(self, line: str) -> bool:
+        return line == self.DESCRIPTION_END_BLOCK
 
     def _extract_description_lines(self, content_lines: List[str]) -> List[str]:
         return [line for line in content_lines if not line.startswith(self.TITLE_LINE)]
