@@ -171,7 +171,7 @@ def get_content(page_text: str) -> List[Content]:
     return get_item_description(page_text, item_titles)
 
 
-def get_item_titles(page_text: str) -> str:
+def get_item_titles(page_text: str) -> List[str]:
     page_lines = page_text.split("\n")
     return [
         page_lines[line_index + 1]

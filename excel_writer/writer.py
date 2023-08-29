@@ -132,7 +132,6 @@ class ExcelWriter:
         sheet: Union[str, int],
         cell_id: Tuple[int, int],
         set_value: Optional[str] = None,
-        style: Optional[CellStyle] = None,
         set_style: Optional[CellStyle] = None,
     ) -> Cell:
         ...
@@ -143,7 +142,6 @@ class ExcelWriter:
         sheet: Union[str, int],
         cell_id: str,
         set_value: Optional[str] = None,
-        style: Optional[CellStyle] = None,
         set_style: Optional[CellStyle] = None,
     ) -> Cell:
         ...

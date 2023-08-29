@@ -1,11 +1,13 @@
 from typing import Optional, Union
 
-from excel_writer.writer import ExcelWriter, Writer
+from excel_writer.writer import ExcelWriter
 from weekly_sales_stats.utils import DateRange, calculate_week_dates
 
 
 class WeeklySalesStatsGenerator:
-    def __init__(self, previous_sheet_location: str, writer: Optional[Writer] = None):
+    def __init__(
+        self, previous_sheet_location: str, writer: Optional[ExcelWriter] = None
+    ):
         self.writer = writer or ExcelWriter(existing_workbook=previous_sheet_location)
 
     def create_new_week_tab(self) -> None:

@@ -81,7 +81,7 @@ class AcknowledgementFormGeneratorGUI:
             self._populate_fields_from_quotation()
 
     def _populate_fields_from_quotation(self):
-        quotation_filepath = self.app.getEntry("pdf_filepath")
+        quotation_filepath = str(self.app.getEntry("pdf_filepath"))
         try:
             self._update_ui_with_quotation_data(quotation_filepath)
         except Exception as exc:
@@ -229,7 +229,7 @@ class AcknowledgementFormGeneratorGUI:
             if content_lines[index].strip()
         ]
 
-    def _set_field_value(self, field: str, value_to_set: str):
+    def _set_field_value(self, field: Field, value_to_set: str):
         self.writer = set_field_value(self.writer, field, value_to_set)
 
     def _set_contents(self):

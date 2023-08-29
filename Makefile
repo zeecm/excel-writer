@@ -8,11 +8,11 @@ install:
 	pre-commit install
 
 check:
-	-pylint .
-	pyright . tests/
+	-pylint ./
+	pyright ./ tests/
 
 test:
-	pytest --cov=. tests/
+	pytest --cov=./ tests/
 
 format:
 	pycln .
