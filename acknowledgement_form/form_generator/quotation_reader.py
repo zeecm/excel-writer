@@ -127,7 +127,7 @@ def get_vessel_class(page_text: str) -> str:
 
 
 def get_duration(page_text: str) -> str:
-    duration_prefix = "Duration:\n"
+    duration_prefix = _get_duration_prefix(page_text)
 
     if duration_prefix not in page_text:
         logger.warning("Duration could not be found")
@@ -136,6 +136,17 @@ def get_duration(page_text: str) -> str:
     duration_start_index = page_text.find(duration_prefix) + len(duration_prefix)
     duration_end_index = _get_end_index_for_duration(page_text, duration_start_index)
     return page_text[duration_start_index:duration_end_index].strip()
+
+
+def _get_duration_prefix(page_text: str) -> str:
+    duration_prefix = "Duration:"
+    duration_prefix_start_index = page_text.find(duration_prefix)
+    duration_endline = "\n"
+    duration_endline_index = page_text.find(
+        duration_endline, duration_prefix_start_index
+    )
+    duration_prefix_end_index = duration_endline_index + len("\n")
+    return page_text[duration_prefix_start_index:duration_prefix_end_index]
 
 
 def _get_end_index_for_duration(page_text: str, start_index) -> int:
