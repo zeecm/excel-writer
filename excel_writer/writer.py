@@ -272,7 +272,8 @@ class ExcelWriter:
         row_height_map = {}
 
         while current_row <= end_row:
-            row_dimensions = worksheet.row_dimensions[current_row].height
+            # openpyxl row dimension indexing
+            row_dimensions = worksheet.row_dimensions[current_row].height  # type: ignore
             row_height_map[current_row] = row_dimensions
             current_row += 1
         return row_height_map
@@ -307,7 +308,8 @@ class ExcelWriter:
         end_row = cell_range.end_row
 
         while current_row <= end_row:
-            worksheet.row_dimensions[current_row].height = default_row_height
+            # openpyxl row dimension indexing
+            worksheet.row_dimensions[current_row].height = default_row_height  # type: ignore
             current_row += 1
 
     def _set_old_column_width_to_default(
@@ -335,7 +337,8 @@ class ExcelWriter:
         worksheet = self.get_worksheet(sheet)
         for row, height in row_height_map.items():
             new_row = row + rows_moved
-            worksheet.row_dimensions[new_row].height = height
+            # openpyxl row dimension indexing
+            worksheet.row_dimensions[new_row].height = height  # type: ignore
 
     def _set_range_column_width(
         self,

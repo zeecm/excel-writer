@@ -64,4 +64,5 @@ class TestSetContent:
 
     def test_signature_block_cell_height(self):
         worksheet = self.writer.active_sheet
-        assert worksheet.row_dimensions[36].height == 30
+        # openpyxl row dimensions indexing
+        assert worksheet.row_dimensions[36].height == 30  # type: ignore

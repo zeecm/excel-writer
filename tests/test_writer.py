@@ -73,9 +73,10 @@ class TestExcelWriter:
         assert cell.value == "test_value"
 
     def test_move_range_with_dimensions(self):
+        # type ignores for openpyxl row dimension indexing
         self.writer.cell(0, "A1", set_value="a1")
         self.writer.cell(0, "B2", set_value="b2")
-        self.writer.active_sheet.row_dimensions[1].height = 30
+        self.writer.active_sheet.row_dimensions[1].height = 30  # type: ignore
         self.writer.active_sheet.column_dimensions["A"].width = 50
         cell_range = CellRange(start_row=1, end_row=2, start_column=1, end_column=2)
         self.writer.move_range(
@@ -83,9 +84,9 @@ class TestExcelWriter:
         )
         assert self.writer.cell(0, "F6").value == "a1"
         assert self.writer.cell(0, "G7").value == "b2"
-        assert self.writer.active_sheet.row_dimensions[6].height == 30
+        assert self.writer.active_sheet.row_dimensions[6].height == 30  # type: ignore
         assert self.writer.active_sheet.column_dimensions["F"].width == 50
-        assert self.writer.active_sheet.row_dimensions[1].height == DEFAULT_ROW_HEIGHT
+        assert self.writer.active_sheet.row_dimensions[1].height == DEFAULT_ROW_HEIGHT  # type: ignore
         assert (
             self.writer.active_sheet.column_dimensions["A"].width
             == DEFAULT_COLUMN_WIDTH

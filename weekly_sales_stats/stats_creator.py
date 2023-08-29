@@ -20,7 +20,7 @@ class WeeklySalesStatsGenerator:
         incremented_week = int(previous_week) + increment
         return tab_name[:-2] + str(incremented_week)
 
-    def _set_data_summary_date(self, sheet: Optional[Union[str, int]] = 0) -> None:
+    def _set_data_summary_date(self, sheet: Union[str, int] = 0) -> None:
         week_str = self._get_sheet_name(sheet)
         week_num = self._get_week_num_from_week_str(week_str)
         week_dates = calculate_week_dates(week_num)
