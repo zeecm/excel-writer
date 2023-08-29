@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 from appJar import gui
 from loguru import logger
@@ -14,18 +14,18 @@ from excel_writer.writer import ExcelWriter
 
 
 class AcknowledgementFormGeneratorGUI:
-    LABEL_ENTRIES: List[Tuple[Union[str, Field], str]] = [
-        ("pdf_filepath", "Quotation PDF Filepath:"),
-        (Field.CLIENT_NAME, "Client Name:"),
-        (Field.JOB_NUM, "Job No.:"),
-        (Field.PO_NUM, "PO No.:"),
-        (Field.QUOTATION_NUM, "Quotation No.:"),
-        (Field.VESSEL, "Vessel:"),
-        (Field.DRAWING_NUM, "Drawing No.:"),
-        (Field.CLASS, "Class:"),
-        (Field.DURATION, "Duration:"),
-        ("output_filename", "Output File Name:"),
-    ]
+    LABEL_ENTRIES: Dict[Union[str, Field], str] = {
+        "pdf_filepath": "Quotation PDF Filepath:",
+        Field.CLIENT_NAME: "Client Name:",
+        Field.JOB_NUM: "Job No.:",
+        Field.PO_NUM: "PO No.:",
+        Field.QUOTATION_NUM: "Quotation No.:",
+        Field.VESSEL: "Vessel:",
+        Field.DRAWING_NUM: "Drawing No.:",
+        Field.CLASS: "Class:",
+        Field.DURATION: "Duration:",
+        "output_filename": "Output File Name:",
+    }
 
     CONTENT_TEXT_AREA_ID = "contents"
     TITLE_LINE = "Title: "
@@ -50,14 +50,14 @@ class AcknowledgementFormGeneratorGUI:
         )
 
     def _setup_entries(self):
-        for entry_id, entry_label in self.LABEL_ENTRIES:
-            self.app.addLabelEntry(entry_id, label=entry_label)
+        for entry_label in self.LABEL_ENTRIES.values():
+            self.app.addLabelEntry(entry_label)
         self.app.addLabel("content_label", "Contents: ")
         self.app.addScrolledTextArea(self.CONTENT_TEXT_AREA_ID)
 
     def _setup_change_functions(self):
-        for entry_id, _ in self.LABEL_ENTRIES:
-            self.app.setEntryChangeFunction(entry_id, self._update_fields)  # type: ignore
+        for entry_label in self.LABEL_ENTRIES.values():
+            self.app.setEntryChangeFunction(entry_label, self._update_fields)  # type: ignore
 
     def _setup_buttons(self):
         self.app.addButton("Select Quotation PDF", self._pdf_file_select)
@@ -77,11 +77,11 @@ class AcknowledgementFormGeneratorGUI:
         if filepath := self.app.openBox(
             fileTypes=[("PDF Files", "*.pdf")], asFile=False
         ):
-            self.app.setEntry("pdf_filepath", filepath)
+            self.app.setEntry(self.LABEL_ENTRIES["pdf_filepath"], filepath)
             self._populate_fields_from_quotation()
 
     def _populate_fields_from_quotation(self):
-        quotation_filepath = str(self.app.getEntry("pdf_filepath"))
+        quotation_filepath = str(self.app.getEntry(self.LABEL_ENTRIES["pdf_filepath"]))
         try:
             self._update_ui_with_quotation_data(quotation_filepath)
         except Exception as exc:
@@ -96,7 +96,7 @@ class AcknowledgementFormGeneratorGUI:
 
     def _set_fields_into_label_entries(self, fields: Dict[Field, str]) -> None:
         for field, value in fields.items():
-            self.app.setEntry(field, value)
+            self.app.setEntry(self.LABEL_ENTRIES[field], value)
 
     def _set_contents_into_text_area(self, contents: List[Content]) -> None:
         content_text = ""
@@ -133,12 +133,14 @@ class AcknowledgementFormGeneratorGUI:
 
     def _set_output_filename(self):
         output_filename = self._generate_output_filename_from_fields()
-        self.app.setEntry("output_filename", output_filename)
+        self.app.setEntry(self.LABEL_ENTRIES["output_filename"], output_filename)
 
     def _generate_output_filename_from_fields(self):
-        client_name = str(self.app.getEntry(Field.CLIENT_NAME))
-        job_number = str(self.app.getEntry(Field.JOB_NUM))
-        quotation_number = str(self.app.getEntry(Field.QUOTATION_NUM))
+        client_name = str(self.app.getEntry(self.LABEL_ENTRIES[Field.CLIENT_NAME]))
+        job_number = str(self.app.getEntry(self.LABEL_ENTRIES[Field.JOB_NUM]))
+        quotation_number = str(
+            self.app.getEntry(self.LABEL_ENTRIES[Field.QUOTATION_NUM])
+        )
         return f"ACK - JN{job_number} - {quotation_number} - {client_name}"
 
     def _save_file(self, button):
@@ -154,8 +156,8 @@ class AcknowledgementFormGeneratorGUI:
     def _check_entries_not_empty(self) -> bool:
         if missing_entries := [
             entry_label
-            for entry_id, entry_label in self.LABEL_ENTRIES
-            if not str(self.app.getEntry(entry_id))
+            for entry_label in self.LABEL_ENTRIES.values()
+            if not str(self.app.getEntry(entry_label))
         ]:
             self._warning_window_for_missing_entries(missing_entries)
             return False
@@ -173,7 +175,7 @@ class AcknowledgementFormGeneratorGUI:
 
     def _generate_job_ack(self):
         for field in Field:
-            field_value = str(self.app.getEntry(field))
+            field_value = str(self.app.getEntry(self.LABEL_ENTRIES[field]))
             self._set_field_value(field, field_value)
         self._set_contents()
 
@@ -237,7 +239,7 @@ class AcknowledgementFormGeneratorGUI:
         self.writer = set_content(self.writer, contents)
 
     def _get_full_output_filepath(self) -> Optional[str]:
-        output_filename = str(self.app.getEntry("output_filename"))
+        output_filename = str(self.app.getEntry(self.LABEL_ENTRIES["output_filename"]))
         if filepath := self.app.saveBox(
             fileName=output_filename,
             dirName=".",
