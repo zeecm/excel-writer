@@ -97,3 +97,27 @@ class TestExcelWriter:
         self.writer.cell(0, "A1").font = ft
         cell_style = self.writer.cell_style(0, "A1")
         assert cell_style.font == ft
+
+
+@pytest.mark.parametrize(
+    "start_row, start_column, end_row, end_column, expected_notation",
+    [
+        (1, 1, 2, 2, "A1:B2"),
+        (1, 2, 3, 4, "B1:D3"),
+        (10, 10, 50, 50, "J10:AX50"),
+    ],
+)
+def test_cell_range_notation(
+    start_row: int,
+    start_column: int,
+    end_row: int,
+    end_column: int,
+    expected_notation: str,
+):
+    cell_range = CellRange(
+        start_row=start_row,
+        start_column=start_column,
+        end_row=end_row,
+        end_column=end_column,
+    )
+    assert cell_range.notation == expected_notation

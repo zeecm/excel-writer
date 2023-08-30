@@ -1,8 +1,22 @@
 from __future__ import annotations
 
 import os
+import traceback
 from copy import copy
-from typing import Dict, NamedTuple, Optional, Protocol, Tuple, Type, Union, overload
+from shutil import rmtree
+from tempfile import mkdtemp
+from typing import (
+    Any,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Protocol,
+    Tuple,
+    Type,
+    Union,
+    overload,
+)
 
 from loguru import logger
 from openpyxl import Workbook, load_workbook
@@ -10,6 +24,15 @@ from openpyxl.cell import Cell
 from openpyxl.styles import Alignment, Border, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
+
+_IS_WINDOWS = False
+
+try:
+    from win32com import client
+
+    _IS_WINDOWS = True
+except ImportError:
+    logger.warning("not on windows, no win32com client")
 
 _CellTypes = Type[Cell]
 
@@ -43,12 +66,17 @@ class CellRange(NamedTuple):
 
     @property
     def notation(self) -> str:
-        start_row_letter = get_column_letter(self.start_column)
-        start_cell = f"{start_row_letter}{self.start_row}"
+        return f"{self.start_notation}:{self.end_notation}"
 
+    @property
+    def start_notation(self) -> str:
+        start_row_letter = get_column_letter(self.start_column)
+        return f"{start_row_letter}{self.start_row}"
+
+    @property
+    def end_notation(self) -> str:
         end_row_letter = get_column_letter(self.end_column)
-        end_cell = f"{end_row_letter}{self.end_row}"
-        return f"{start_cell}:{end_cell}"
+        return f"{end_row_letter}{self.end_row}"
 
 
 class Writer(Protocol):
@@ -125,6 +153,68 @@ class ExcelWriter:
     def save_workbook(self, filepath: str, filename: str) -> None:
         full_filepath = os.path.join(filepath, filename)
         self._workbook.save(full_filepath)
+        logger.info(f"saved workbook to {full_filepath}")
+
+    def export_as_pdf(
+        self, filepath: str, filename: str, sheet: Union[str, int] = 0
+    ) -> None:
+        pdf_filepath = os.path.join(filepath, filename)
+        sheet_index = self._get_sheet_index(sheet)
+        if not _IS_WINDOWS:
+            logger.error("Unable to export as PDF, not on Windows")
+            return
+        self._save_temporary_excel_and_print_pdf(sheet_index, pdf_filepath)
+
+    def _save_temporary_excel_and_print_pdf(
+        self, sheet_index: int, pdf_filepath: str
+    ) -> None:
+        temp_excel_filename = self._generate_temp_workbook_filename(pdf_filepath)
+        tmpdir = mkdtemp()
+        temp_filepath = os.path.join(tmpdir, temp_excel_filename)
+        self.save_workbook(tmpdir, temp_excel_filename)
+        excel = client.Dispatch("Excel.Application")
+        self._print_pdf_with_error_handling(
+            excel, temp_filepath, pdf_filepath, sheet_index
+        )
+        rmtree(tmpdir, ignore_errors=True)
+        excel.Quit()
+
+    def _generate_temp_workbook_filename(self, pdf_filepath: str) -> str:
+        filename_only = os.path.basename(pdf_filepath)
+        return filename_only.replace(".pdf", ".xlsx")
+
+    def _get_sheet_index(self, sheet: Union[str, int]) -> int:
+        worksheet = self.get_worksheet(sheet)
+        return self._workbook.index(worksheet)
+
+    def _print_pdf_with_error_handling(
+        self,
+        excel_client: Any,
+        temp_workbook_filepath: str,
+        pdf_filepath: str,
+        sheet_index: int,
+    ) -> None:
+        try:
+            self._print_pdf_using_win32com_client(
+                excel_client, temp_workbook_filepath, pdf_filepath, sheet_index
+            )
+        except AttributeError:
+            logger.error(f"failed to save to PDF: {traceback.format_exc()}")
+
+    def _print_pdf_using_win32com_client(
+        self,
+        excel_client: Any,
+        temp_workbook_filepath: str,
+        pdf_filepath: str,
+        sheet_index: int,
+    ) -> None:
+        excel_client.Visible = False
+        workbook = excel_client.Workbooks.Open(temp_workbook_filepath)
+        worksheet = workbook.Worksheets[sheet_index]
+        worksheet.ExportAsFixedFormat(0, pdf_filepath)
+        logger.info(f"saved pdf to {pdf_filepath}")
+        workbook.Saved = True
+        workbook.Close()
 
     @overload
     def cell(
@@ -351,3 +441,18 @@ class ExcelWriter:
             new_column = column + columns_moved
             column_letter = get_column_letter(new_column)
             worksheet.column_dimensions[column_letter].width = width
+
+    def get_print_area(
+        self,
+        sheet: Union[str, int] = 0,
+    ) -> List[str]:
+        worksheet = self.get_worksheet(sheet)
+        return worksheet.print_area
+
+    def set_print_area(
+        self,
+        sheet: Union[str, int],
+        print_area: Union[str, List[str]],
+    ) -> None:
+        worksheet = self.get_worksheet(sheet)
+        worksheet.print_area = print_area
