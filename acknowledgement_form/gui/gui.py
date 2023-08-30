@@ -96,7 +96,7 @@ class AcknowledgementFormGeneratorGUI:
             self._populate_fields_from_quotation()
 
     def _populate_fields_from_quotation(self):
-        quotation_filepath = self._get_entr("pdf_filepath")
+        quotation_filepath = self._get_entry("pdf_filepath")
         try:
             self._update_ui_with_quotation_data(quotation_filepath)
         except Exception as exc:

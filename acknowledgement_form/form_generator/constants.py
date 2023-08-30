@@ -41,3 +41,5 @@ FIRST_CONTENT_DESCRIPTION_CELL = "B17"
 SIGNATURE_BLOCK_CELL_RANGE = CellRange(
     start_row=19, start_column=2, end_row=28, end_column=3
 )
+
+POSSIBLE_NULL_VALUES = ["", "-", "NA", "N/A"]

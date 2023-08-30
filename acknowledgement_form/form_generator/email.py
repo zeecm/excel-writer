@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from acknowledgement_form.form_generator.constants import Content
+from acknowledgement_form.form_generator.constants import POSSIBLE_NULL_VALUES, Content
 
 
 class ConfirmationEmailGenerator:
@@ -25,7 +25,7 @@ class ConfirmationEmailGenerator:
         self._vessel_class = vessel_class
         self._po_number = po_number
         self._duration = duration
-        self._drawing_number = drawing_number.replace("-", "")
+        self._drawing_number = drawing_number
 
     def create_email_subject(self) -> str:
         subject = "Confirmation: "
@@ -98,4 +98,4 @@ class ConfirmationEmailGenerator:
         return "".join(email_body_lines)
 
     def _not_null(self, value: Optional[str]) -> bool:
-        return value is not None and value.strip() != ""
+        return value is not None and value.strip() not in POSSIBLE_NULL_VALUES
