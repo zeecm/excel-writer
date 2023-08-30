@@ -10,7 +10,7 @@ from acknowledgement_form.form_generator.constants import (
     Content,
     Field,
 )
-from excel_writer.writer import ExcelWriter
+from excel_writer.writer import CellRange, ExcelWriter
 
 
 def load_template(template_filepath: str = TEMPLATE_FILEPATH) -> ExcelWriter:
@@ -76,4 +76,14 @@ def set_content(writer: ExcelWriter, contents: List[Content]) -> ExcelWriter:
         0, current_signature_range, rows_to_move=rows_to_move
     )
 
+    return _set_print_area(writer, current_signature_range)
+
+
+def _set_print_area(writer: ExcelWriter, signature_range: CellRange) -> ExcelWriter:
+    end_cell = signature_range.move_range(
+        rows_to_move=1, columns_to_move=1
+    ).end_notation
+    start_cell = "B2"
+    print_area = f"{start_cell}:{end_cell}"
+    writer.set_print_area(0, print_area)
     return writer

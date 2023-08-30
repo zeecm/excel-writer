@@ -13,6 +13,7 @@ setup(
         "loguru",
         "pypdf",
         "appjar",
+        "pywin32; platform_system=='Windows'",
     ],
     extras_require={
         "dev": [

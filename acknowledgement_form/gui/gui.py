@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from appJar import gui
 from loguru import logger
@@ -30,6 +30,7 @@ class AcknowledgementFormGeneratorGUI:
     CONTENT_TEXT_AREA_ID = "contents"
     TITLE_LINE = "Title: "
     DESCRIPTION_START_LINE = "Description:\n"
+    DESCRIPTION_END_BLOCK = "---ENDBLOCK---"
 
     def __init__(self):
         self.app = gui("Acknowledgement Form Generator", useTtk=True)
@@ -62,6 +63,7 @@ class AcknowledgementFormGeneratorGUI:
     def _setup_buttons(self):
         self.app.addButton("Select Quotation PDF", self._pdf_file_select)
         self.app.addButton("Save", self._save_file)
+        self.app.addButton("Save As PDF", self._save_as_pdf)
 
     def _setup_icon(self):
         try:
@@ -126,6 +128,7 @@ class AcknowledgementFormGeneratorGUI:
     ) -> str:
         for description_line in descriptions:
             content_text += f"{description_line} \n"
+        content_text += f"\n{self.DESCRIPTION_END_BLOCK}\n"
         return content_text
 
     def _update_fields(self):
@@ -141,17 +144,23 @@ class AcknowledgementFormGeneratorGUI:
         quotation_number = str(
             self.app.getEntry(self.LABEL_ENTRIES[Field.QUOTATION_NUM])
         )
-        return f"ACK - JN{job_number} - {quotation_number} - {client_name}"
+        return f"ACK-JN{job_number}-{quotation_number}-{client_name}".replace(" ", "_")
 
     def _save_file(self, button):
         if not self._check_entries_not_empty():
             return
-        self._load_writer()
-        self._generate_job_ack()
-        full_filepath = self._get_full_output_filepath()
-        if full_filepath is not None:
-            self.writer.save_workbook("", filename=full_filepath)
-            logger.info(f"saved workbook to {full_filepath}")
+        self._generate_acknowledgement()
+        excel_filepath = self._get_excel_filepath()
+        if excel_filepath is not None:
+            self.writer.save_workbook("", filename=excel_filepath)
+
+    def _save_as_pdf(self, button):
+        if not self._check_entries_not_empty():
+            return
+        self._generate_acknowledgement()
+        pdf_filepath = self._get_pdf_filepath()
+        if pdf_filepath is not None:
+            self.writer.export_as_pdf("", filename=pdf_filepath)
 
     def _check_entries_not_empty(self) -> bool:
         if missing_entries := [
@@ -173,7 +182,12 @@ class AcknowledgementFormGeneratorGUI:
     def _load_writer(self):
         self.writer = load_template()
 
-    def _generate_job_ack(self):
+    def _generate_acknowledgement(self) -> bool:
+        self._load_writer()
+        self._update_writer_with_gui_contents()
+        return True
+
+    def _update_writer_with_gui_contents(self):
         for field in Field:
             field_value = str(self.app.getEntry(self.LABEL_ENTRIES[field]))
             self._set_field_value(field, field_value)
@@ -203,18 +217,22 @@ class AcknowledgementFormGeneratorGUI:
         description_line_indexes: List[int] = []
 
         for line_index, line in enumerate(description_lines):
-            if line_index == 0:
-                continue
             if self._is_description_start_line(line):
+                continue
+            if self._is_end_of_description_block(line):
                 descriptions.append(
                     self._get_description_lines(
                         description_lines, description_line_indexes
                     )
                 )
                 description_line_indexes.clear()
-            else:
-                description_line_indexes.append(line_index)
+                continue
+            description_line_indexes.append(line_index)
+
         return descriptions
+
+    def _is_end_of_description_block(self, line: str) -> bool:
+        return line == self.DESCRIPTION_END_BLOCK
 
     def _extract_description_lines(self, content_lines: List[str]) -> List[str]:
         return [line for line in content_lines if not line.startswith(self.TITLE_LINE)]
@@ -238,15 +256,32 @@ class AcknowledgementFormGeneratorGUI:
         contents = self._get_content_from_text_area()
         self.writer = set_content(self.writer, contents)
 
-    def _get_full_output_filepath(self) -> Optional[str]:
-        output_filename = str(self.app.getEntry(self.LABEL_ENTRIES["output_filename"]))
-        if filepath := self.app.saveBox(
-            fileName=output_filename,
-            dirName=".",
-            fileTypes=[("Excel Workbook", "*.xlsx")],
+    def _get_excel_filepath(self) -> Optional[str]:
+        return self._get_filepath(("Excel", "*.xlsx"))
+
+    def _get_pdf_filepath(self) -> Optional[str]:
+        return self._get_filepath(("PDF", "*.pdf"))
+
+    def _get_filepath(self, filetype: Tuple[str, str]) -> Optional[str]:
+        output_filename = self._read_output_entry()
+        if filepath := self._open_savebox(
+            output_filename=output_filename, filetype=filetype
         ):
             return filepath
         return None
+
+    def _open_savebox(
+        self,
+        output_filename: Optional[str] = None,
+        directory: Optional[str] = None,
+        filetype: Optional[Tuple[str, str]] = None,
+    ) -> str:
+        return self.app.saveBox(
+            fileName=output_filename, dirName=directory, fileTypes=[filetype]
+        )
+
+    def _read_output_entry(self) -> str:
+        return str(self.app.getEntry(self.LABEL_ENTRIES["output_filename"]))
 
     def go(self):
         self.app.go()
