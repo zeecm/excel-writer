@@ -4,5 +4,8 @@ requires = ["setuptools"]
 [tool.isort]
 profile="black"
 
+[tool.black]
+preview=true
+
 [tool.pyright]
 exclude = ["zc_flightplan_toolkit/qdesigner_generated_ui/*"]

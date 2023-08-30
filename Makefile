@@ -8,7 +8,7 @@ install:
 	pre-commit install
 
 check:
-	-pylint ./
+	-pylint $(PACKAGE)
 	pyright ./ tests/
 
 test:
@@ -16,7 +16,7 @@ test:
 
 format:
 	pycln .
-	black .
+	black . --preview
 	isort .
 
 make-acknowledgement-form:
