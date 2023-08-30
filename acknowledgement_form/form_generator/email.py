@@ -10,6 +10,7 @@ class ConfirmationEmailGenerator:
         vessel_details: str = "",
         quotation_number: str = "",
         job_number: str = "",
+        drawing_number: str = "",
         contents: Optional[List[Content]] = None,
         duration: str = "",
         vessel_class: str = "Not Involved",
@@ -24,12 +25,13 @@ class ConfirmationEmailGenerator:
         self._vessel_class = vessel_class
         self._po_number = po_number
         self._duration = duration
+        self._drawing_number = drawing_number.replace("-", "")
 
     def create_email_subject(self) -> str:
         subject = "Confirmation: "
         info_string_map = self._create_info_string_map()
         for info, info_str in info_string_map.items():
-            if info is not None:
+            if self._not_null(info):
                 subject += info_str
         return subject
 
@@ -64,7 +66,7 @@ class ConfirmationEmailGenerator:
 
     def _create_final_line(self) -> str:
         final_line = "For work detail please refer to attached quotation"
-        if self._po_number is not None:
+        if self._not_null(self._po_number):
             final_line += " and PO"
         return f"{final_line}."
 
@@ -75,30 +77,25 @@ class ConfirmationEmailGenerator:
         final_line: str,
     ) -> str:
         email_body_lines = [
-            "Hi All,",
+            "Hi All,\n\n",
+            f"Please take note of {subject}.\n\n",
+            f"Job No.: {self._job_number}\n",
+            (f"PO No.: {self._po_number}\n" if self._not_null(self._po_number) else ""),
+            (
+                f"Drawing No.: {self._drawing_number}\n"
+                if self._not_null(self._drawing_number)
+                else ""
+            ),
             "\n",
-            "\n",
-            f"Please take note of {subject}.",
-            "\n",
-            "\n",
-            f"Job No.: {self._job_number}",
-            f"\nPO No.: {self._po_number}" if self._po_number is not None else "",
-            "\n",
-            "\n",
-            "Content:",
-            "\n",
-            "\n",
-            content_lines,
-            "\n",
-            "\n",
-            f"Duration: {self._duration}",
-            "\n",
-            "\n",
-            f"Class: {self._vessel_class}",
-            "\n",
-            "\n",
+            "Content:\n\n",
+            f"{content_lines}\n\n",
+            f"Duration: {self._duration}\n",
+            f"Class: {self._vessel_class}\n\n",
             final_line,
             "\n",
             "\n",
         ]
         return "".join(email_body_lines)
+
+    def _not_null(self, value: Optional[str]) -> bool:
+        return value is not None and value.strip() != ""

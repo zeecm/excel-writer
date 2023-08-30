@@ -82,7 +82,7 @@ def test_email_subject(
                 "Hi All,\n\nPlease take note of Confirmation: ABC PTE LTD - 15M Boat -"
                 " MMSQ23-123 - JOB NO 2308001.\n\nJob No.:"
                 " 2308001\n\nContent:\n\ntitle1\ndesc1\ndesc2\n\ntitle2\ndesc1\ndesc2\n\nDuration:"
-                " 2 months\n\nClass: BV\n\nFor work detail please refer to attached"
+                " 2 months\nClass: BV\n\nFor work detail please refer to attached"
                 " quotation.\n\n"
             ),
         ),
@@ -105,7 +105,7 @@ def test_email_subject(
             (
                 "Hi All,\n\nPlease take note of Confirmation: XYZ PTE LTD - 40M Ship -"
                 " MMSQ23-456 - PO 123456 - JOB NO 2308099.\n\nJob No.: 2308099\nPO No.:"
-                " 123456\n\nContent:\n\ntitle1\ndesc1\n\nDuration: 2 days\n\nClass:"
+                " 123456\n\nContent:\n\ntitle1\ndesc1\n\nDuration: 2 days\nClass:"
                 " ABS\n\nFor work detail please refer to attached quotation and PO.\n\n"
             ),
         ),
