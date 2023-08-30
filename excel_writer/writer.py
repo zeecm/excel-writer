@@ -28,6 +28,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 _IS_WINDOWS = False
 
 try:
+    from pywintypes import com_error
     from win32com import client
 
     _IS_WINDOWS = True
@@ -198,7 +199,7 @@ class ExcelWriter:
             self._print_pdf_using_win32com_client(
                 excel_client, temp_workbook_filepath, pdf_filepath, sheet_index
             )
-        except AttributeError:
+        except (AttributeError, com_error):
             logger.error(f"failed to save to PDF: {traceback.format_exc()}")
 
     def _print_pdf_using_win32com_client(
@@ -211,7 +212,12 @@ class ExcelWriter:
         excel_client.Visible = False
         workbook = excel_client.Workbooks.Open(temp_workbook_filepath)
         worksheet = workbook.Worksheets[sheet_index]
-        worksheet.ExportAsFixedFormat(0, pdf_filepath)
+        try:
+            worksheet.ExportAsFixedFormat(0, pdf_filepath)
+        except com_error:
+            logger.error(
+                f"failed while saving as PDF using wincom32 {traceback.format_exc()}"
+            )
         logger.info(f"saved pdf to {pdf_filepath}")
         workbook.Saved = True
         workbook.Close()
